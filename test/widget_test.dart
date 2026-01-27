@@ -11,20 +11,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:plantpal/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('PlantPal app smoke test', (WidgetTester tester) async {
+    // Build the app
+    await tester.pumpWidget(const PlantPalApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify PlantPal title exists
+    expect(find.text('PlantPal'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Verify splash screen icon is displayed
+    expect(find.byIcon(Icons.local_florist), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify tagline exists
+    expect(find.text('Your Plant Care Companion'), findsOneWidget);
+  });
+
+  testWidgets('App uses Material3 theme', (WidgetTester tester) async {
+    await tester.pumpWidget(const PlantPalApp());
+
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    expect(materialApp.theme?.useMaterial3, true);
+    expect(materialApp.title, 'PlantPal');
   });
 }
