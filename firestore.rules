@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection
+    // - Authenticated users can read/write their own user document
+    // - Users cannot access other users' documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Plants collection
+    // - Authenticated users can read all plants
+    // - Only admin users can write plant data (for future admin dashboard)
+    match /plants/{plantId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.token.admin == true;
+    }
+  }
+}
