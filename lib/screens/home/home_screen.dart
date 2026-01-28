@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_colors.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,13 +10,16 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Plants'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // Navigate to profile screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -43,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                 'Your plant list will appear here once data is loaded from Firestore.',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -52,16 +57,8 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   // Navigate to plant detail (placeholder)
                 },
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.search),
                 label: const Text('Browse Plants'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
               ),
             ],
           ),
@@ -69,10 +66,12 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add plant functionality (future implementation)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Add plant feature coming soon!'),
+            ),
+          );
         },
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );
