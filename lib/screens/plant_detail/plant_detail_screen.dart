@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 class PlantDetailScreen extends StatelessWidget {
-  const PlantDetailScreen({super.key});
+  final String plantName;
+
+  const PlantDetailScreen({
+    super.key,
+    required this.plantName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plant Details'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        title: Text(plantName),
       ),
       body: SingleChildScrollView(
         child: Padding(
