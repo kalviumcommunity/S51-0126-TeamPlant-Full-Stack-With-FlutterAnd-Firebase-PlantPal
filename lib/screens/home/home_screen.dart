@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/plant_card.dart';
 import '../../constants/app_colors.dart';
 import '../../models/plant_model.dart';
 import '../../services/firestore_service.dart';
@@ -8,6 +9,52 @@ import '../plant_detail/plant_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  // Sample plant data (will be replaced with Firestore data)
+  static const List<Map<String, String>> _samplePlants = [
+    {
+      'name': 'Snake Plant',
+      'scientificName': 'Sansevieria trifasciata',
+      'wateringFrequency': '2-3 weeks',
+      'sunlight': 'Low-Bright',
+      'description': 'A hardy, low-maintenance succulent with striking upright leaves.',
+    },
+    {
+      'name': 'Pothos',
+      'scientificName': 'Epipremnum aureum',
+      'wateringFrequency': 'Weekly',
+      'sunlight': 'Low-Bright',
+      'description': 'A popular trailing vine with heart-shaped leaves.',
+    },
+    {
+      'name': 'Spider Plant',
+      'scientificName': 'Chlorophytum comosum',
+      'wateringFrequency': 'Twice/week',
+      'sunlight': 'Bright',
+      'description': 'A resilient plant with arching leaves and baby plantlets.',
+    },
+    {
+      'name': 'Peace Lily',
+      'scientificName': 'Spathiphyllum',
+      'wateringFrequency': 'Weekly',
+      'sunlight': 'Low-Medium',
+      'description': 'Elegant plant with glossy leaves and white flowers.',
+    },
+    {
+      'name': 'Aloe Vera',
+      'scientificName': 'Aloe barbadensis',
+      'wateringFrequency': '3 weeks',
+      'sunlight': 'Bright',
+      'description': 'Medicinal succulent with thick, fleshy leaves.',
+    },
+    {
+      'name': 'Rubber Plant',
+      'scientificName': 'Ficus elastica',
+      'wateringFrequency': '1-2 weeks',
+      'sunlight': 'Medium-Bright',
+      'description': 'Bold plant with large, glossy dark green leaves.',
+    },
+  ];
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

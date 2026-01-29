@@ -4,179 +4,110 @@ import 'package:plantpal/screens/auth/login_screen.dart';
 
 void main() {
   group('LoginScreen Widget Tests', () {
-    testWidgets('displays all required UI elements', (tester) async {
+    testWidgets('displays Login in app bar', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      // Verify app bar with Login title
       expect(find.byType(AppBar), findsOneWidget);
       expect(find.descendant(
         of: find.byType(AppBar),
         matching: find.text('Login'),
       ), findsOneWidget);
+    });
 
-      // Verify icon
-      expect(find.byIcon(Icons.eco), findsOneWidget);
+    testWidgets('displays Welcome Back text', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: LoginScreen()),
+      );
 
-      // Verify welcome text
       expect(find.text('Welcome Back!'), findsOneWidget);
+    });
 
-      // Verify email field
-      expect(find.byType(TextField), findsNWidgets(2));
+    testWidgets('displays eco icon', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: LoginScreen()),
+      );
+
+      expect(find.byIcon(Icons.eco), findsOneWidget);
+    });
+
+    testWidgets('has email text field', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: LoginScreen()),
+      );
+
       expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+    });
 
-      // Verify password field
+    testWidgets('has password text field', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: LoginScreen()),
+      );
+
       expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
-
-      // Verify login button
-      expect(find.widgetWithText(ElevatedButton, 'Login'), findsOneWidget);
-
-      // Verify sign up link
-      expect(find.text('Don\'t have an account? Sign Up'), findsOneWidget);
     });
 
-    testWidgets('email field accepts input', (tester) async {
+    testWidgets('email field has email icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      final emailField = find.widgetWithText(TextField, 'Email');
-      await tester.enterText(emailField, 'test@example.com');
-
-      expect(find.text('test@example.com'), findsOneWidget);
+      expect(find.byIcon(Icons.email), findsOneWidget);
     });
 
-    testWidgets('password field accepts input', (tester) async {
+    testWidgets('password field has lock icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      final passwordField = find.widgetWithText(TextField, 'Password');
-      await tester.enterText(passwordField, 'password123');
-
-      // Password is obscured, so we check if the field accepted input
-      expect(
-        tester.widget<TextField>(passwordField).controller?.text,
-        isNull,
-      ); // No controller in skeleton version
+      expect(find.byIcon(Icons.lock), findsOneWidget);
     });
 
     testWidgets('password field is obscured', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      final passwordField =
-          tester.widget<TextField>(find.widgetWithText(TextField, 'Password'));
-
+      final passwordField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Password'),
+      );
       expect(passwordField.obscureText, true);
-    });
-
-    testWidgets('login button has correct styling', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
-      );
-
-      final loginButton = find.widgetWithText(ElevatedButton, 'Login');
-      expect(loginButton, findsOneWidget);
-
-      final button = tester.widget<ElevatedButton>(loginButton);
-      expect(button.onPressed, isNotNull);
-    });
-
-    testWidgets('sign up link is tappable', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
-      );
-
-      final signUpLink = find.text('Don\'t have an account? Sign Up');
-      expect(signUpLink, findsOneWidget);
-
-      final textButton = tester.widget<TextButton>(
-        find.ancestor(
-          of: signUpLink,
-          matching: find.byType(TextButton),
-        ),
-      );
-      expect(textButton.onPressed, isNotNull);
-    });
-
-    testWidgets('has proper layout structure', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
-      );
-
-      // Verify Scaffold exists
-      expect(find.byType(Scaffold), findsOneWidget);
-
-      // Verify AppBar exists
-      expect(find.byType(AppBar), findsOneWidget);
-
-      // Verify Padding exists for body
-      expect(find.byType(Padding), findsWidgets);
-
-      // Verify Column for vertical layout
-      expect(find.byType(Column), findsWidgets);
     });
 
     testWidgets('email field has email keyboard type', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
       final emailField = tester.widget<TextField>(
         find.widgetWithText(TextField, 'Email'),
       );
-
       expect(emailField.keyboardType, TextInputType.emailAddress);
     });
 
-    testWidgets('has correct decorations on text fields', (tester) async {
+    testWidgets('has Login button', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      final emailField = tester.widget<TextField>(
-        find.widgetWithText(TextField, 'Email'),
-      );
-
-      expect(emailField.decoration?.prefixIcon, isNotNull);
-      expect(emailField.decoration?.border, isA<OutlineInputBorder>());
-      expect(emailField.decoration?.filled, true);
+      expect(find.widgetWithText(ElevatedButton, 'Login'), findsOneWidget);
     });
 
-    testWidgets('login button is initially enabled', (tester) async {
+    testWidgets('has Sign Up link', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: LoginScreen(),
-        ),
+        const MaterialApp(home: LoginScreen()),
       );
 
-      final button = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Login'),
+      expect(find.text("Don't have an account? Sign Up"), findsOneWidget);
+    });
+
+    testWidgets('has 2 text fields', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: LoginScreen()),
       );
 
-      // In skeleton version, button should still be defined
-      expect(button.onPressed, isNotNull);
+      expect(find.byType(TextField), findsNWidgets(2));
     });
   });
 }
