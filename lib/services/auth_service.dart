@@ -35,6 +35,24 @@ class AuthService {
     }
   }
 
+  // Send password reset email
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  // Update user display name
+  Future<void> updateDisplayName(String displayName) async {
+    try {
+      await _auth.currentUser?.updateDisplayName(displayName);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
