@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
-import 'home/home_screen.dart';
+import 'home/main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,9 +28,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final user = _authService.currentUser;
 
     if (user != null) {
-      // User is logged in, navigate to home
+      // User is logged in, navigate to main screen
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } else {
       // User is not logged in, navigate to login

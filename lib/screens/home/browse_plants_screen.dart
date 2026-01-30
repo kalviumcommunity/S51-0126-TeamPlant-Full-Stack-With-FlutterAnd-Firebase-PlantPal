@@ -6,14 +6,14 @@ import '../../services/firestore_service.dart';
 import '../profile/profile_screen.dart';
 import '../plant_detail/plant_detail_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class BrowsePlantsScreen extends StatefulWidget {
+  const BrowsePlantsScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<BrowsePlantsScreen> createState() => _BrowsePlantsScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _BrowsePlantsScreenState extends State<BrowsePlantsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   String _searchQuery = '';
   bool _isGridView = true;
@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Plants'),
+        title: const Text('Browse Plants'),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Tap the button below to add sample plants to your collection.',
+              'Tap the button below to add sample plants to browse.',
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.textSecondary,
@@ -302,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const AlertDialog(
+        builder: (ctx) => const AlertDialog(
           content: Row(
             children: [
               CircularProgressIndicator(),

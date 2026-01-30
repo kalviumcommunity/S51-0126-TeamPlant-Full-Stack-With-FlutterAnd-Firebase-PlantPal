@@ -269,16 +269,8 @@ class PlantDetailScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -294,38 +286,6 @@ class PlantDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        ...maintenanceTips.map((tip) => _buildTipItem(tip)),
-      ],
-    );
-  }
-
-  Widget _buildTipItem(String tip) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 6),
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              tip,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
