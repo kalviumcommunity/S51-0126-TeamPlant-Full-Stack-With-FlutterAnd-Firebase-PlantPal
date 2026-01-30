@@ -272,6 +272,126 @@ class FirestoreService {
     }
   }
 
+  // ==================== USER PLANT COLLECTION OPERATIONS ====================
+
+  /// Get user's saved plants subcollection reference
+  CollectionReference _userPlantsCollection(String uid) {
+    return _usersCollection.doc(uid).collection('savedPlants');
+  }
+
+  /// Add a plant to user's collection
+  Future<void> addPlantToCollection(String uid, String plantId) async {
+    try {
+      await _userPlantsCollection(uid).doc(plantId).set({
+        'plantId': plantId,
+        'savedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to add plant to collection: $e');
+    }
+  }
+
+  /// Remove a plant from user's collection
+  Future<void> removePlantFromCollection(String uid, String plantId) async {
+    try {
+      await _userPlantsCollection(uid).doc(plantId).delete();
+    } catch (e) {
+      throw Exception('Failed to remove plant from collection: $e');
+    }
+  }
+
+  /// Check if a plant is in user's collection
+  Future<bool> isPlantInCollection(String uid, String plantId) async {
+    try {
+      final doc = await _userPlantsCollection(uid).doc(plantId).get();
+      return doc.exists;
+    } catch (e) {
+      throw Exception('Failed to check plant in collection: $e');
+    }
+  }
+
+  /// Get user's saved plant IDs
+  Future<List<String>> getUserSavedPlantIds(String uid) async {
+    try {
+      final snapshot = await _userPlantsCollection(uid)
+          .orderBy('savedAt', descending: true)
+          .get();
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      throw Exception('Failed to get saved plant IDs: $e');
+    }
+  }
+
+  /// Get user's saved plants with full plant data
+  Future<List<PlantModel>> getUserSavedPlants(String uid) async {
+    try {
+      final plantIds = await getUserSavedPlantIds(uid);
+      final plants = <PlantModel>[];
+
+      for (final plantId in plantIds) {
+        final plant = await getPlant(plantId);
+        if (plant != null) {
+          plants.add(plant);
+        }
+      }
+
+      return plants;
+    } catch (e) {
+      throw Exception('Failed to get saved plants: $e');
+    }
+  }
+
+  /// Stream user's saved plant IDs in real-time
+  Stream<List<String>> streamUserSavedPlantIds(String uid) {
+    return _userPlantsCollection(uid)
+        .orderBy('savedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
+  }
+
+  /// Stream user's saved plants with full data in real-time
+  Stream<List<PlantModel>> streamUserSavedPlants(String uid) {
+    return _userPlantsCollection(uid)
+        .orderBy('savedAt', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final plants = <PlantModel>[];
+      for (final doc in snapshot.docs) {
+        final plant = await getPlant(doc.id);
+        if (plant != null) {
+          plants.add(plant);
+        }
+      }
+      return plants;
+    });
+  }
+
+  /// Get count of user's saved plants
+  Future<int> getUserSavedPlantsCount(String uid) async {
+    try {
+      final snapshot = await _userPlantsCollection(uid).get();
+      return snapshot.docs.length;
+    } catch (e) {
+      throw Exception('Failed to get saved plants count: $e');
+    }
+  }
+
+  /// Toggle plant in user's collection (add if not present, remove if present)
+  Future<bool> togglePlantInCollection(String uid, String plantId) async {
+    try {
+      final isInCollection = await isPlantInCollection(uid, plantId);
+      if (isInCollection) {
+        await removePlantFromCollection(uid, plantId);
+        return false; // Plant was removed
+      } else {
+        await addPlantToCollection(uid, plantId);
+        return true; // Plant was added
+      }
+    } catch (e) {
+      throw Exception('Failed to toggle plant in collection: $e');
+    }
+  }
+
   // ==================== BATCH OPERATIONS ====================
 
   /// Batch write operations for efficiency
