@@ -1,60 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../widgets/plant_card.dart';
+import '../../widgets/plant_filter_sheet.dart';
 import '../../constants/app_colors.dart';
 import '../../models/plant_model.dart';
 import '../../services/firestore_service.dart';
-import '../../widgets/plant_card.dart';
 import '../profile/profile_screen.dart';
 import '../plant_detail/plant_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
-  // Sample plant data (will be replaced with Firestore data)
-  static const List<Map<String, String>> _samplePlants = [
-    {
-      'name': 'Snake Plant',
-      'scientificName': 'Sansevieria trifasciata',
-      'wateringFrequency': '2-3 weeks',
-      'sunlight': 'Low-Bright',
-      'description': 'A hardy, low-maintenance succulent with striking upright leaves.',
-    },
-    {
-      'name': 'Pothos',
-      'scientificName': 'Epipremnum aureum',
-      'wateringFrequency': 'Weekly',
-      'sunlight': 'Low-Bright',
-      'description': 'A popular trailing vine with heart-shaped leaves.',
-    },
-    {
-      'name': 'Spider Plant',
-      'scientificName': 'Chlorophytum comosum',
-      'wateringFrequency': 'Twice/week',
-      'sunlight': 'Bright',
-      'description': 'A resilient plant with arching leaves and baby plantlets.',
-    },
-    {
-      'name': 'Peace Lily',
-      'scientificName': 'Spathiphyllum',
-      'wateringFrequency': 'Weekly',
-      'sunlight': 'Low-Medium',
-      'description': 'Elegant plant with glossy leaves and white flowers.',
-    },
-    {
-      'name': 'Aloe Vera',
-      'scientificName': 'Aloe barbadensis',
-      'wateringFrequency': '3 weeks',
-      'sunlight': 'Bright',
-      'description': 'Medicinal succulent with thick, fleshy leaves.',
-    },
-    {
-      'name': 'Rubber Plant',
-      'scientificName': 'Ficus elastica',
-      'wateringFrequency': '1-2 weeks',
-      'sunlight': 'Medium-Bright',
-      'description': 'Bold plant with large, glossy dark green leaves.',
-    },
-  ];
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -64,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   String _searchQuery = '';
   bool _isGridView = true;
+  PlantFilters _activeFilters = PlantFilters.empty;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +27,36 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('My Plants'),
         automaticallyImplyLeading: false,
         actions: [
+          // Filter button with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: _showFilterSheet,
+                tooltip: 'Filter plants',
+              ),
+              if (_activeFilters.hasActiveFilters)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${_activeFilters.activeFilterCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
             onPressed: () {
@@ -127,6 +112,89 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
+          // Active filter chips
+          if (_activeFilters.hasActiveFilters)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Active Filters:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _activeFilters = PlantFilters.empty;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Clear all',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      ..._activeFilters.sunlightLevels.map((s) => Chip(
+                            label: Text(s, style: const TextStyle(fontSize: 11)),
+                            deleteIcon: const Icon(Icons.close, size: 14),
+                            onDeleted: () {
+                              setState(() {
+                                final updated = Set<String>.from(
+                                    _activeFilters.sunlightLevels)
+                                  ..remove(s);
+                                _activeFilters = _activeFilters.copyWith(
+                                    sunlightLevels: updated);
+                              });
+                            },
+                            backgroundColor: Colors.orange[50],
+                            side: BorderSide(color: Colors.orange[200]!),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          )),
+                      ..._activeFilters.wateringFrequencies.map((w) => Chip(
+                            label: Text(w, style: const TextStyle(fontSize: 11)),
+                            deleteIcon: const Icon(Icons.close, size: 14),
+                            onDeleted: () {
+                              setState(() {
+                                final updated = Set<String>.from(
+                                    _activeFilters.wateringFrequencies)
+                                  ..remove(w);
+                                _activeFilters = _activeFilters.copyWith(
+                                    wateringFrequencies: updated);
+                              });
+                            },
+                            backgroundColor: Colors.blue[50],
+                            side: BorderSide(color: Colors.blue[200]!),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          )),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
           // Plant List
           Expanded(
             child: StreamBuilder<List<PlantModel>>(
@@ -148,14 +216,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   return _buildEmptyState();
                 }
 
-                // Filter plants based on search query
-                final filteredPlants = _searchQuery.isEmpty
-                    ? plants
-                    : plants.where((plant) {
-                        final query = _searchQuery.toLowerCase();
-                        return plant.name.toLowerCase().contains(query) ||
-                            plant.scientificName.toLowerCase().contains(query);
-                      }).toList();
+                // Apply all filters (search + sunlight + watering)
+                final filteredPlants = _applyFilters(plants);
 
                 if (filteredPlants.isEmpty) {
                   return _buildNoResultsState();
@@ -271,6 +333,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildNoResultsState() {
+    final hasFilters = _activeFilters.hasActiveFilters;
+    final hasSearch = _searchQuery.isNotEmpty;
+
+    String message;
+    if (hasFilters && hasSearch) {
+      message = 'Try adjusting your search or filters';
+    } else if (hasFilters) {
+      message = 'Try adjusting your filters';
+    } else {
+      message = 'Try a different search term';
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -290,9 +364,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Try a different search term',
+            message,
             style: TextStyle(color: AppColors.textSecondary),
           ),
+          if (hasFilters) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _activeFilters = PlantFilters.empty;
+                });
+              },
+              icon: const Icon(Icons.filter_list_off),
+              label: const Text('Clear Filters'),
+            ),
+          ],
         ],
       ),
     );
@@ -342,6 +428,54 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => PlantDetailScreen(plant: plant),
       ),
     );
+  }
+
+  void _showFilterSheet() {
+    PlantFilterSheet.show(
+      context: context,
+      currentFilters: _activeFilters,
+      onApply: (filters) {
+        setState(() {
+          _activeFilters = filters;
+        });
+      },
+    );
+  }
+
+  /// Apply all filters (search + sunlight + watering) to the plant list
+  List<PlantModel> _applyFilters(List<PlantModel> plants) {
+    var filtered = plants;
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((plant) {
+        return plant.name.toLowerCase().contains(query) ||
+            plant.scientificName.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    // Apply sunlight filter
+    if (_activeFilters.sunlightLevels.isNotEmpty) {
+      filtered = filtered.where((plant) {
+        final sunlight = plant.sunlightRequirement.toLowerCase();
+        return _activeFilters.sunlightLevels.any(
+          (level) => sunlight.contains(level.toLowerCase()),
+        );
+      }).toList();
+    }
+
+    // Apply watering filter
+    if (_activeFilters.wateringFrequencies.isNotEmpty) {
+      filtered = filtered.where((plant) {
+        final watering = plant.wateringFrequency.toLowerCase();
+        return _activeFilters.wateringFrequencies.any(
+          (freq) => watering.contains(freq.toLowerCase()),
+        );
+      }).toList();
+    }
+
+    return filtered;
   }
 
   Future<void> _seedSampleData() async {
