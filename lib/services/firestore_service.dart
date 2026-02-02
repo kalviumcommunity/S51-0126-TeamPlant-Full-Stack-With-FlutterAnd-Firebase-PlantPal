@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/plant_model.dart';
+import '../models/care_reminder_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -299,6 +300,239 @@ class FirestoreService {
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to batch delete plants: $e');
+    }
+  }
+
+  // ==================== CARE REMINDER OPERATIONS ====================
+
+  /// Get reference to user's reminders subcollection
+  CollectionReference _remindersCollection(String uid) {
+    return _usersCollection.doc(uid).collection('reminders');
+  }
+
+  /// Create a new care reminder for a user
+  Future<String> createReminder(String uid, CareReminderModel reminder) async {
+    try {
+      final docRef = await _remindersCollection(uid).add(reminder.toMap());
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Failed to create reminder: $e');
+    }
+  }
+
+  /// Get a specific reminder by ID
+  Future<CareReminderModel?> getReminder(String uid, String reminderId) async {
+    try {
+      final doc = await _remindersCollection(uid).doc(reminderId).get();
+      if (doc.exists) {
+        return CareReminderModel.fromDocument(doc);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get reminder: $e');
+    }
+  }
+
+  /// Get all reminders for a user
+  Future<List<CareReminderModel>> getAllReminders(String uid) async {
+    try {
+      final snapshot = await _remindersCollection(uid)
+          .orderBy('nextDue', descending: false)
+          .get();
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get reminders: $e');
+    }
+  }
+
+  /// Get all enabled reminders for a user
+  Future<List<CareReminderModel>> getEnabledReminders(String uid) async {
+    try {
+      final snapshot = await _remindersCollection(uid)
+          .where('enabled', isEqualTo: true)
+          .orderBy('nextDue', descending: false)
+          .get();
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get enabled reminders: $e');
+    }
+  }
+
+  /// Get reminders that are due (nextDue is in the past or today)
+  Future<List<CareReminderModel>> getDueReminders(String uid) async {
+    try {
+      final now = DateTime.now();
+      final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+      final snapshot = await _remindersCollection(uid)
+          .where('enabled', isEqualTo: true)
+          .where('nextDue', isLessThanOrEqualTo: Timestamp.fromDate(endOfToday))
+          .orderBy('nextDue', descending: false)
+          .get();
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get due reminders: $e');
+    }
+  }
+
+  /// Get reminders for a specific plant
+  Future<List<CareReminderModel>> getRemindersForPlant(
+    String uid,
+    String plantId,
+  ) async {
+    try {
+      final snapshot = await _remindersCollection(uid)
+          .where('plantId', isEqualTo: plantId)
+          .get();
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get reminders for plant: $e');
+    }
+  }
+
+  /// Stream all reminders for a user in real-time
+  Stream<List<CareReminderModel>> streamAllReminders(String uid) {
+    return _remindersCollection(uid)
+        .orderBy('nextDue', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    });
+  }
+
+  /// Stream due reminders for a user in real-time
+  Stream<List<CareReminderModel>> streamDueReminders(String uid) {
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    return _remindersCollection(uid)
+        .where('enabled', isEqualTo: true)
+        .where('nextDue', isLessThanOrEqualTo: Timestamp.fromDate(endOfToday))
+        .orderBy('nextDue', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => CareReminderModel.fromDocument(doc))
+          .toList();
+    });
+  }
+
+  /// Update a reminder
+  Future<void> updateReminder(
+    String uid,
+    String reminderId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      await _remindersCollection(uid).doc(reminderId).update(updates);
+    } catch (e) {
+      throw Exception('Failed to update reminder: $e');
+    }
+  }
+
+  /// Mark a reminder as completed and update next due date
+  Future<void> completeReminder(String uid, String reminderId) async {
+    try {
+      final reminder = await getReminder(uid, reminderId);
+      if (reminder == null) {
+        throw Exception('Reminder not found');
+      }
+
+      final completed = reminder.markCompleted();
+      await _remindersCollection(uid).doc(reminderId).update({
+        'lastCompleted': Timestamp.fromDate(completed.lastCompleted!),
+        'nextDue': Timestamp.fromDate(completed.nextDue),
+      });
+    } catch (e) {
+      throw Exception('Failed to complete reminder: $e');
+    }
+  }
+
+  /// Toggle reminder enabled status
+  Future<void> toggleReminderEnabled(String uid, String reminderId) async {
+    try {
+      final reminder = await getReminder(uid, reminderId);
+      if (reminder == null) {
+        throw Exception('Reminder not found');
+      }
+
+      await _remindersCollection(uid).doc(reminderId).update({
+        'enabled': !reminder.enabled,
+      });
+    } catch (e) {
+      throw Exception('Failed to toggle reminder: $e');
+    }
+  }
+
+  /// Delete a reminder
+  Future<void> deleteReminder(String uid, String reminderId) async {
+    try {
+      await _remindersCollection(uid).doc(reminderId).delete();
+    } catch (e) {
+      throw Exception('Failed to delete reminder: $e');
+    }
+  }
+
+  /// Delete all reminders for a specific plant
+  Future<void> deleteRemindersForPlant(String uid, String plantId) async {
+    try {
+      final reminders = await getRemindersForPlant(uid, plantId);
+      final batch = _firestore.batch();
+
+      for (final reminder in reminders) {
+        batch.delete(_remindersCollection(uid).doc(reminder.id));
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to delete reminders for plant: $e');
+    }
+  }
+
+  /// Get count of due reminders for a user
+  Future<int> getDueRemindersCount(String uid) async {
+    try {
+      final reminders = await getDueReminders(uid);
+      return reminders.length;
+    } catch (e) {
+      throw Exception('Failed to get due reminders count: $e');
+    }
+  }
+
+  /// Create default reminders for a plant (water reminder)
+  Future<void> createDefaultReminders(
+    String uid,
+    String plantId,
+    String plantName,
+  ) async {
+    try {
+      final now = DateTime.now();
+
+      // Create a default water reminder (7 days)
+      final waterReminder = CareReminderModel(
+        id: '',
+        plantId: plantId,
+        plantName: plantName,
+        reminderType: ReminderType.water,
+        frequencyDays: 7,
+        nextDue: now.add(const Duration(days: 7)),
+        enabled: true,
+        createdAt: now,
+      );
+
+      await createReminder(uid, waterReminder);
+    } catch (e) {
+      throw Exception('Failed to create default reminders: $e');
     }
   }
 }
