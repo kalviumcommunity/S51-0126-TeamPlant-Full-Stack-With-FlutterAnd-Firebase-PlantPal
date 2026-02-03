@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/plant_model.dart';
+import '../models/user_preferences_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -299,6 +300,213 @@ class FirestoreService {
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to batch delete plants: $e');
+    }
+  }
+
+  // ==================== USER PREFERENCES OPERATIONS ====================
+
+  /// Get reference to user's preferences document
+  DocumentReference _preferencesDoc(String uid) {
+    return _usersCollection.doc(uid).collection('settings').doc('preferences');
+  }
+
+  /// Create default preferences for a new user
+  Future<void> createUserPreferences(String uid) async {
+    try {
+      final prefs = UserPreferencesModel.defaults(uid);
+      await _preferencesDoc(uid).set(prefs.toMap());
+    } catch (e) {
+      throw Exception('Failed to create user preferences: $e');
+    }
+  }
+
+  /// Get user preferences
+  Future<UserPreferencesModel?> getUserPreferences(String uid) async {
+    try {
+      final doc = await _preferencesDoc(uid).get();
+      if (doc.exists) {
+        return UserPreferencesModel.fromDocument(doc);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get user preferences: $e');
+    }
+  }
+
+  /// Get user preferences, creating defaults if they don't exist
+  Future<UserPreferencesModel> getOrCreateUserPreferences(String uid) async {
+    try {
+      final existing = await getUserPreferences(uid);
+      if (existing != null) {
+        return existing;
+      }
+
+      // Create defaults
+      await createUserPreferences(uid);
+      return UserPreferencesModel.defaults(uid);
+    } catch (e) {
+      throw Exception('Failed to get or create user preferences: $e');
+    }
+  }
+
+  /// Update user preferences
+  Future<void> updateUserPreferences(
+    String uid,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      updates['updatedAt'] = Timestamp.now();
+      await _preferencesDoc(uid).update(updates);
+    } catch (e) {
+      throw Exception('Failed to update user preferences: $e');
+    }
+  }
+
+  /// Update a single preference
+  Future<void> updateSinglePreference(
+    String uid,
+    String key,
+    dynamic value,
+  ) async {
+    try {
+      await _preferencesDoc(uid).update({
+        key: value,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update preference: $e');
+    }
+  }
+
+  /// Toggle a boolean preference
+  Future<void> togglePreference(String uid, String key) async {
+    try {
+      final prefs = await getUserPreferences(uid);
+      if (prefs == null) {
+        throw Exception('User preferences not found');
+      }
+
+      final map = prefs.toMap();
+      if (map[key] is! bool) {
+        throw Exception('Preference $key is not a boolean');
+      }
+
+      await updateSinglePreference(uid, key, !map[key]);
+    } catch (e) {
+      throw Exception('Failed to toggle preference: $e');
+    }
+  }
+
+  /// Stream user preferences in real-time
+  Stream<UserPreferencesModel?> streamUserPreferences(String uid) {
+    return _preferencesDoc(uid).snapshots().map((doc) {
+      if (doc.exists) {
+        return UserPreferencesModel.fromDocument(doc);
+      }
+      return null;
+    });
+  }
+
+  /// Update notification settings
+  Future<void> updateNotificationSettings(
+    String uid, {
+    bool? notificationsEnabled,
+    bool? emailNotifications,
+    bool? pushNotifications,
+    DefaultReminderTime? defaultReminderTime,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+
+      if (notificationsEnabled != null) {
+        updates['notificationsEnabled'] = notificationsEnabled;
+      }
+      if (emailNotifications != null) {
+        updates['emailNotifications'] = emailNotifications;
+      }
+      if (pushNotifications != null) {
+        updates['pushNotifications'] = pushNotifications;
+      }
+      if (defaultReminderTime != null) {
+        updates['defaultReminderTime'] = defaultReminderTime.value;
+      }
+
+      if (updates.isNotEmpty) {
+        await updateUserPreferences(uid, updates);
+      }
+    } catch (e) {
+      throw Exception('Failed to update notification settings: $e');
+    }
+  }
+
+  /// Update display settings
+  Future<void> updateDisplaySettings(
+    String uid, {
+    AppThemeMode? themeMode,
+    bool? showPlantImages,
+    bool? compactView,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+
+      if (themeMode != null) {
+        updates['themeMode'] = themeMode.value;
+      }
+      if (showPlantImages != null) {
+        updates['showPlantImages'] = showPlantImages;
+      }
+      if (compactView != null) {
+        updates['compactView'] = compactView;
+      }
+
+      if (updates.isNotEmpty) {
+        await updateUserPreferences(uid, updates);
+      }
+    } catch (e) {
+      throw Exception('Failed to update display settings: $e');
+    }
+  }
+
+  /// Update default reminder frequencies
+  Future<void> updateReminderDefaults(
+    String uid, {
+    int? waterReminderDays,
+    int? fertilizeReminderDays,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+
+      if (waterReminderDays != null) {
+        updates['defaultWaterReminderDays'] = waterReminderDays;
+      }
+      if (fertilizeReminderDays != null) {
+        updates['defaultFertilizeReminderDays'] = fertilizeReminderDays;
+      }
+
+      if (updates.isNotEmpty) {
+        await updateUserPreferences(uid, updates);
+      }
+    } catch (e) {
+      throw Exception('Failed to update reminder defaults: $e');
+    }
+  }
+
+  /// Reset preferences to defaults
+  Future<void> resetUserPreferences(String uid) async {
+    try {
+      final prefs = UserPreferencesModel.defaults(uid);
+      await _preferencesDoc(uid).set(prefs.toMap());
+    } catch (e) {
+      throw Exception('Failed to reset user preferences: $e');
+    }
+  }
+
+  /// Delete user preferences
+  Future<void> deleteUserPreferences(String uid) async {
+    try {
+      await _preferencesDoc(uid).delete();
+    } catch (e) {
+      throw Exception('Failed to delete user preferences: $e');
     }
   }
 }
